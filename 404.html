@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    <script>
+        // GitHub Pages redirect helper
+        // เมื่อเข้า /abc จะถูก redirect มาที่ 404.html
+        // เราจะเอา path มาแปลงเป็น hash แล้ว redirect ไป index.html
+        (function() {
+            const path = window.location.pathname;
+            const slug = path.substring(path.lastIndexOf('/') + 1);
+            
+            if (slug && slug !== '404.html') {
+                // Redirect to index.html with hash
+                window.location.replace('/#' + slug);
+            } else {
+                window.location.replace('/');
+            }
+        })();
+    </script>
+</head>
+<body>
+    <p style="text-align: center; padding: 50px; font-family: sans-serif;">
+        กำลัง redirect... ⏳
+    </p>
+</body>
+</html>
