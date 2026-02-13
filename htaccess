@@ -1,0 +1,16 @@
+# URL Shortener - Rewrite Rules
+
+# เปิดใช้งาน Rewrite Engine
+RewriteEngine On
+
+# กำหนด base directory (ปรับตามโฟลเดอร์ที่ติดตั้ง)
+# ถ้าติดตั้งที่ root ให้ใช้ /
+# ถ้าติดตั้งที่ subfolder เช่น /shortener/ ให้ใช้ /shortener/
+RewriteBase /
+
+# อนุญาตไฟล์จริงให้ผ่าน
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Redirect ทุก request ที่ไม่ใช่ไฟล์จริงไปที่ index.html
+RewriteRule ^([a-zA-Z0-9-]+)$ /index.html [L]
