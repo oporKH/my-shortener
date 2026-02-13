@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener - ระบบลิงก์สั้น</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            display: none;
+            background: #f0f7ff;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .short-url {
+            font-size: 18px;
+            color: #667eea;
+            word-break: break-all;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .copy-btn:hover {
+            background: #5568d3;
+        }
+
+        .links-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .links-table th, .links-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .links-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .links-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .delete-btn:hover {
+            background: #ee5a6f;
+        }
+
+        .stats {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 16px;
+        }
+
+        .hint {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #667eea;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔗 URL Shortener</h1>
+            <p>ระบบลิงก์สั้นส่วนตัว - ใช้งานง่าย ควบคุมเอง</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('create')">สร้างลิงก์ใหม่</div>
+            <div class="tab" onclick="switchTab('manage')">จัดการลิงก์</div>
+        </div>
+
+        <!-- สร้างลิงก์ใหม่ -->
+        <div id="create-tab" class="tab-content active">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">สร้างลิงก์สั้น</h2>
+                
+                <div id="alert-container"></div>
+
+                <form id="shorten-form">
+                    <div class="form-group">
+                        <label for="long-url">URL เต็ม (ลิงก์ที่ต้องการย่อ) *</label>
+                        <input type="url" id="long-url" placeholder="https://example.com/very-long-url" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="custom-slug">รหัสที่ต้องการ (ไม่บังคับ)</label>
+                        <input type="text" id="custom-slug" placeholder="เช่น promo2024, summer-sale">
+                        <div class="hint">เว้นว่างไว้เพื่อสร้างรหัสอัตโนมัติ (a-z, 0-9, - เท่านั้น)</div>
+                    </div>
+
+                    <button type="submit" class="btn">🚀 สร้างลิงก์สั้น</button>
+                </form>
+
+                <div id="result" class="result">
+                    <h3 style="margin-bottom: 10px;">✅ สร้างลิงก์สำเร็จ!</h3>
+                    <div class="short-url" id="short-url-display"></div>
+                    <button class="copy-btn" onclick="copyToClipboard()">📋 คัดลอก</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- จัดการลิงก์ -->
+        <div id="manage-tab" class="tab-content">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>ลิงก์ทั้งหมด</h2>
+                    <button class="btn" onclick="exportData()">📥 Export ข้อมูล</button>
+                </div>
+
+                <div id="links-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ระบบจัดการข้อมูล
+        class URLShortener {
+            constructor() {
+                this.links = this.loadLinks();
+            }
+
+            loadLinks() {
+                const data = localStorage.getItem('shortLinks');
+                return data ? JSON.parse(data) : {};
+            }
+
+            saveLinks() {
+                localStorage.setItem('shortLinks', JSON.stringify(this.links));
+            }
+
+            generateSlug() {
+                const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+                let slug = '';
+                for (let i = 0; i < 6; i++) {
+                    slug += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return this.links[slug] ? this.generateSlug() : slug;
+            }
+
+            validateSlug(slug) {
+                return /^[a-z0-9-]+$/.test(slug);
+            }
+
+            createShortLink(longUrl, customSlug = null) {
+                const slug = customSlug || this.generateSlug();
+                
+                if (customSlug && !this.validateSlug(customSlug)) {
+                    throw new Error('รหัสต้องเป็น a-z, 0-9, หรือ - เท่านั้น');
+                }
+
+                if (this.links[slug]) {
+                    throw new Error('รหัสนี้ถูกใช้แล้ว กรุณาเลือกรหัสอื่น');
+                }
+
+                this.links[slug] = {
+                    url: longUrl,
+                    created: new Date().toISOString(),
+                    clicks: 0
+                };
+                this.saveLinks();
+                return slug;
+            }
+
+            deleteLink(slug) {
+                delete this.links[slug];
+                this.saveLinks();
+            }
+
+            redirect(slug) {
+                if (this.links[slug]) {
+                    this.links[slug].clicks++;
+                    this.saveLinks();
+                    window.location.href = this.links[slug].url;
+                    return true;
+                }
+                return false;
+            }
+
+            getAllLinks() {
+                return Object.entries(this.links).map(([slug, data]) => ({
+                    slug,
+                    ...data
+                })).sort((a, b) => new Date(b.created) - new Date(a.created));
+            }
+        }
+
+        const shortener = new URLShortener();
+
+        // ตรวจสอบ redirect
+        window.addEventListener('load', () => {
+            const path = window.location.pathname;
+            const slug = path.substring(path.lastIndexOf('/') + 1);
+            
+            // ถ้าไม่ใช่หน้าหลัก (index.html) ให้ลอง redirect
+            if (slug && slug !== 'index.html' && slug !== '') {
+                if (shortener.redirect(slug)) {
+                    return;
+                } else {
+                    alert('ไม่พบลิงก์นี้');
+                    window.location.href = '/';
+                }
+            }
+            
+            renderLinks();
+        });
+
+        // ฟอร์มสร้างลิงก์
+        document.getElementById('shorten-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const longUrl = document.getElementById('long-url').value;
+            const customSlug = document.getElementById('custom-slug').value.trim();
+            
+            try {
+                const slug = shortener.createShortLink(longUrl, customSlug || null);
+                const shortUrl = `${window.location.origin}/${slug}`;
+                
+                document.getElementById('short-url-display').textContent = shortUrl;
+                document.getElementById('result').classList.add('show');
+                
+                showAlert('สร้างลิงก์สำเร็จ!', 'success');
+                
+                // รีเซ็ตฟอร์ม
+                e.target.reset();
+                
+                // อัพเดทตาราง
+                renderLinks();
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        });
+
+        // คัดลอกลิงก์
+        function copyToClipboard() {
+            const text = document.getElementById('short-url-display').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showAlert('คัดลอกลิงก์แล้ว!', 'success');
+            });
+        }
+
+        // แสดง Alert
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 3000);
+        }
+
+        // สลับแท็บ
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            if (tabName === 'manage') {
+                renderLinks();
+            }
+        }
+
+        // แสดงตารางลิงก์
+        function renderLinks() {
+            const container = document.getElementById('links-container');
+            const links = shortener.getAllLinks();
+            
+            if (links.length === 0) {
+                container.innerHTML = '<div class="empty-state">ยังไม่มีลิงก์ สร้างลิงก์แรกของคุณเลย!</div>';
+                return;
+            }
+            
+            let html = `
+                <table class="links-table">
+                    <thead>
+                        <tr>
+                            <th>รหัส</th>
+                            <th>URL ปลายทาง</th>
+                            <th>สร้างเมื่อ</th>
+                            <th>คลิก</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            links.forEach(link => {
+                const shortUrl = `${window.location.origin}/${link.slug}`;
+                const date = new Date(link.created).toLocaleString('th-TH');
+                html += `
+                    <tr>
+                        <td><a href="${shortUrl}" target="_blank">${link.slug}</a></td>
+                        <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            <a href="${link.url}" target="_blank">${link.url}</a>
+                        </td>
+                        <td>${date}</td>
+                        <td><span class="stats">${link.clicks} ครั้ง</span></td>
+                        <td>
+                            <button class="delete-btn" onclick="deleteLink('${link.slug}')">🗑️ ลบ</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // ลบลิงก์
+        function deleteLink(slug) {
+            if (confirm('ต้องการลบลิงก์นี้ใช่ไหม?')) {
+                shortener.deleteLink(slug);
+                renderLinks();
+                showAlert('ลบลิงก์แล้ว', 'success');
+            }
+        }
+
+        // Export ข้อมูล
+        function exportData() {
+            const data = JSON.stringify(shortener.links, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `short-links-backup-${Date.now()}.json`;
+            a.click();
+        }
+    </script>
+</body>
+</html>
